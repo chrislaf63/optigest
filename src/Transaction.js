@@ -1,6 +1,6 @@
 import React from "react";
 
-export function Transaction({ id, name, type, amount, user, onDelete }) {
+export function Transaction({ id, name, type, amount, user, user_id, onDelete }) {
     return (
         <div className="flex">
             <div className="bg-gray-200 p-4 my-2 text-center">

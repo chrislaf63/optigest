@@ -6,6 +6,71 @@ function MainPage() {
     const [data, setData] = useState([]);
     const [user, setUser] = useState(null);
 
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = localStorage.getItem('authToken'); // Récupérez le token depuis le localStorage
+
+            try {
+                const response = await axios.get('http://localhost:8000/api/transactions', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` // Ajoutez le token aux en-têtes
+                    },
+                });
+                setData(response.data);
+                if (response.data.length > 0) {
+                    setUser(response.data[0].user);
+                }
+            } catch (error) {
+                console.error('Erreur :', error);
+                alert('Une erreur est survenue');
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+
+        const name = e.target.name.value;
+        const type = e.target.type.value;
+        const amount = e.target.amount.value;
+
+
+        const newTransaction = {
+            name: name,
+            type: type,
+            amount: amount,
+            user_id: user.id
+
+        };
+
+        const token = localStorage.getItem('authToken'); // Récupérez le token depuis le localStorage
+
+        try {
+            const response = await axios.post('http://localhost:8000/api/transactions', newTransaction, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // Ajoutez le token aux en-têtes
+                },
+            });
+
+            console.log('Response status:', response.status);
+
+            if (response.status === 200 || response.status=== 201 || response.status === 204) {
+                console.log('Transaction deleted successfully');
+                setData([...data, newTransaction]);
+            } else {
+                alert('Une erreur est survenue lors de l\'ajout');
+            }
+        } catch (error) {
+            console.error('Erreur :', error);
+            alert('Une erreur est survenue lors de l\'ajout');
+        }
+
+    }
+
         const onDelete = async (transactionId) => {
             const token = localStorage.getItem('authToken'); // Récupérez le token depuis le localStorage
 
@@ -19,7 +84,7 @@ function MainPage() {
 
                 console.log('Response status:', response.status);
 
-                if (response.status === 200 || response.status === 204) {
+                if (response.status === 200 || response.status === 201 || response.status === 204) {
                     console.log('Transaction deleted successfully');
                     setData((curr) => curr.filter((transaction) => transaction.id !== transactionId));
                 } else {
@@ -31,29 +96,7 @@ function MainPage() {
             }
         };
 
-        useEffect(() => {
-            const fetchData = async () => {
-                const token = localStorage.getItem('authToken'); // Récupérez le token depuis le localStorage
 
-                try {
-                    const response = await axios.get('http://localhost:8000/api/transactions', {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}` // Ajoutez le token aux en-têtes
-                        },
-                    });
-                    setData(response.data);
-                    if (response.data.length > 0) {
-                        setUser(response.data[0].user);
-                    }
-                } catch (error) {
-                    console.error('Erreur :', error);
-                    alert('Une erreur est survenue');
-                }
-            };
-
-            fetchData();
-        }, []);
         const TransactionsList = data.map((transaction) => {
             return (
                 <Transaction id={transaction.id}
@@ -74,6 +117,15 @@ function MainPage() {
                     OptiGest
                 </header>
                 {user && <h1>Bonjour {user.name}</h1>}
+                <form  onSubmit={handleSubmit} className="flex flex-col w-60 gap-y-1.5">
+                    <input type="text" name="name" placeholder="Nom de l'opération"/>
+                    <select name="type">
+                    <option value="credit" selected>Crédit</option>
+                    <option value="debit">Débit</option>
+                    </select>
+                    <input type="text" name="amount" placeholder="Montant"/>
+                    <input className="bg-green-300" type="submit" value="Ajouter"/>
+                </form>
                 <div>{TransactionsList}</div>
                 {user && <p>Solde : {user.balance}</p>}
             </div>
