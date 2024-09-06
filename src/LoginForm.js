@@ -1,7 +1,9 @@
 import React, {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
 
 function LoginForm() {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -21,7 +23,10 @@ function LoginForm() {
             });
                 if(response.status === 200 || response.status === 201)
             {
+                const token = response.data.token;
+                localStorage.setItem('authToken', token);
                 alert('Vous êtes connecté');
+                navigate('/main');
             }
         } catch (error)
             {
